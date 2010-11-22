@@ -442,20 +442,24 @@ class Notey(object):
     date_now = dt.now().strftime(DATEFMT)
     curr_date=dt.strptime(date_now,DATEFMT)
     diff=curr_date-mod_date
-    diff_hr=((diff.seconds)/3600)
-    diff_hr_rem=((diff.seconds)%3600)
-    if diff_hr== 0:
-        diff_min=diff_hr_rem/(60)
-        diff_min_rem=diff_hr_rem%(60)
-        if diff_min == 0:
-          ago="about %d sec(s) ago" % diff_min_rem
-        else:
-          ago="about %d minute(s) ago" % diff_min
-    elif diff_hr <= 24:
-        ago="about %d hour(s) ago" % diff_hr
-    elif (diff_hr > 24 and diff_hr <= 48):
-        mod_time = mod_date.strftime("%H:%M")
-        ago="Yesterday at %s" % mod_time
+
+    weeks, days = divmod(diff.days, 7)
+    minutes, seconds = divmod(diff.seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+
+    if weeks > 0:
+      ago="about %d week(s) ago" % weeks
+    elif days > 0:
+      ago="about %d day(s) ago" % days
+    elif ( hours > 0 ):
+      mod_time = mod_date.strftime("%H:%M")
+      ago="Yesterday at %s" % mod_time
+    elif ( minutes > 0 ):
+      ago="about %d minute(s) ago" % minutes
+    elif ( seconds > 0 ):
+      ago="about %d second(s) ago" % seconds
+    else
+      return ""
     return ago
 
       
