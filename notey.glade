@@ -2,7 +2,6 @@
 <interface>
   <requires lib="gtk+" version="2.20"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkTextBuffer" id="noteText"/>
   <object class="GtkListStore" id="tocList">
     <columns>
       <!-- column-name Title -->
@@ -15,9 +14,9 @@
     <property name="title" translatable="yes">Notey</property>
     <property name="default_width">480</property>
     <property name="default_height">640</property>
-    <signal name="key_release_event" handler="on_mainWindow_key_release_event"/>
     <signal name="delete_event" handler="on_mainWindow_delete_event"/>
     <signal name="window_state_event" handler="on_mainWindow_window_state_event"/>
+    <signal name="key_release_event" handler="on_mainWindow_key_release_event"/>
     <child>
       <object class="GtkVBox" id="topVBox">
         <property name="visible">True</property>
@@ -36,6 +35,7 @@
                     <property name="secondary_icon_stock">gtk-find</property>
                     <property name="primary_icon_activatable">True</property>
                     <property name="secondary_icon_activatable">True</property>
+                    <signal name="focus_out_event" handler="on_titleEntry_focus_out_event"/>
                     <signal name="activate" handler="on_titleEntry_activate"/>
                     <signal name="key_release_event" handler="on_titleEntry_key_release_event"/>
                   </object>
@@ -78,6 +78,7 @@
                 <property name="label" translatable="yes">Preferences</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-preferences</property>
+                <signal name="clicked" handler="on_preferencesButton_clicked"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -128,6 +129,7 @@
                   <object class="GtkTextView" id="noteTextView">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="wrap_mode">word</property>
                     <property name="buffer">noteText</property>
                     <signal name="focus_out_event" handler="on_noteTextView_focus_out_event"/>
                   </object>
@@ -152,7 +154,6 @@
                 <property name="visible">True</property>
                 <property name="activity_mode">True</property>
                 <property name="show_text">True</property>
-                <property name="fraction">0.01</property>
               </object>
               <packing>
                 <property name="position">0</property>
@@ -178,4 +179,5 @@
       </object>
     </child>
   </object>
+  <object class="GtkTextBuffer" id="noteText"/>
 </interface>

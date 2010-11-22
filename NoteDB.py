@@ -3,8 +3,9 @@ import sys
 import os
 import sqlite3
 from datetime import datetime
+from time import time
 
-DATEFMT = "%Y-%m-%d %H:%M"
+DATEFMT = "%Y-%m-%d %H:%M:%S"
 
 class NoteNotFoundException(Exception):
   def __init__(self, message):
@@ -33,7 +34,7 @@ class NoteDBsqlite3(object):
   def init_db(self):
     conn = sqlite3.connect(self.db)
     c = conn.cursor()
-    c.execute("create table notes ( title text UNIQUE, mod_date text, content text )")
+    c.execute("create table notes ( title text UNIQUE, mod_date real, content text )")
     conn.commit()
     c.close()
   
@@ -68,7 +69,7 @@ class NoteDBsqlite3(object):
   def rename_note(self, title, new_title):
     conn = sqlite3.connect(self.db)
     c = conn.cursor()
-    mod_date = datetime.now().strftime(DATEFMT)
+    mod_date = time()
     c.execute(
               "update notes set title = ?, mod_date = ? where title = ?", 
                 (new_title, mod_date, title)
@@ -76,10 +77,11 @@ class NoteDBsqlite3(object):
     conn.commit()
     c.close()    
 
-  def create_note(self, title, content):
+  def create_note(self, title, content, mod_date=0):
     conn = sqlite3.connect(self.db)
     c = conn.cursor()
-    mod_date = datetime.now().strftime(DATEFMT)
+    if mod_date == 0:
+      mod_date = time()
     c.execute(
               "insert into notes values (?, ?, ?)",
                (title,mod_date,content)
@@ -87,10 +89,11 @@ class NoteDBsqlite3(object):
     conn.commit()
     c.close()  
   
-  def update_note(self, title, content):
+  def update_note(self, title, content, mod_date=0):
     conn = sqlite3.connect(self.db)
     c = conn.cursor()
-    mod_date = datetime.now().strftime(DATEFMT)
+    if mod_date == 0:
+      mod_date = time()
     c.execute(
               "update notes set content = ?,mod_date = ? where title = ?",
                 (content, mod_date, title)
@@ -104,4 +107,3 @@ class NoteDBsqlite3(object):
     c.execute("delete from notes where title = ?", (title,))
     conn.commit()
     c.close()
-
