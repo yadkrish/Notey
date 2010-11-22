@@ -1,0 +1,181 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.20"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkTextBuffer" id="noteText"/>
+  <object class="GtkListStore" id="tocList">
+    <columns>
+      <!-- column-name Title -->
+      <column type="gchararray"/>
+      <!-- column-name Modified -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkWindow" id="mainWindow">
+    <property name="title" translatable="yes">Notey</property>
+    <property name="default_width">480</property>
+    <property name="default_height">640</property>
+    <signal name="key_release_event" handler="on_mainWindow_key_release_event"/>
+    <signal name="delete_event" handler="on_mainWindow_delete_event"/>
+    <signal name="window_state_event" handler="on_mainWindow_window_state_event"/>
+    <child>
+      <object class="GtkVBox" id="topVBox">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkToolbar" id="mainToolbar">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkToolItem" id="titleToolbarContainer">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkEntry" id="titleEntry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="has_frame">False</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                    <property name="secondary_icon_stock">gtk-find</property>
+                    <property name="primary_icon_activatable">True</property>
+                    <property name="secondary_icon_activatable">True</property>
+                    <signal name="activate" handler="on_titleEntry_activate"/>
+                    <signal name="key_release_event" handler="on_titleEntry_key_release_event"/>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="emailButton">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Email</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-go-forward</property>
+                <signal name="clicked" handler="on_emailButton_clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="printButton">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Print</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-print</property>
+                <signal name="clicked" handler="on_printButton_clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="preferencesButton">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Preferences</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-preferences</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVPaned" id="mainVPane">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <object class="GtkScrolledWindow" id="tocListViewScrolledWindow">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <child>
+                  <object class="GtkTreeView" id="tocListView">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="model">tocList</property>
+                    <property name="enable_search">False</property>
+                    <property name="rubber_banding">True</property>
+                    <property name="enable_grid_lines">horizontal</property>
+                    <signal name="row_activated" handler="on_tocListView_row_activated"/>
+                    <signal name="key_release_event" handler="on_tocListView_key_release_event"/>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">False</property>
+                <property name="shrink">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="noteTextViewScrolledWindow">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <child>
+                  <object class="GtkTextView" id="noteTextView">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="buffer">noteText</property>
+                    <signal name="focus_out_event" handler="on_noteTextView_focus_out_event"/>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkStatusbar" id="statusbar">
+            <property name="visible">True</property>
+            <property name="spacing">2</property>
+            <child>
+              <object class="GtkProgressBar" id="eventProgressBar">
+                <property name="visible">True</property>
+                <property name="activity_mode">True</property>
+                <property name="show_text">True</property>
+                <property name="fraction">0.01</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="keypressLabel">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
