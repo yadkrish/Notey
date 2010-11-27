@@ -11,6 +11,9 @@ from datetime import datetime as dt
 from ConfigParser import SafeConfigParser
 from base64 import b64encode
 import threading
+import tempfile
+import win32api
+
 
 try:
   import win32print
@@ -157,7 +160,7 @@ class Notey(object):
     self._build_ui()
     self.tocList_populate()
     self.mainWindow.show()
-    self.titleEntry.grab_focus() 
+    self.titleEntry.grab_focus()
     self.simplenote_login()
     
   def read_config(self):
@@ -254,6 +257,15 @@ class Notey(object):
     #
     self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
 
+    
+  """
+  def test_texttags(self):
+    tag1 = self.noteText.create_tag(name=None, font="Sans Italic 12")
+    tag2 = self.noteText.create_tag(name=None, foreground="Yellow")
+    self.noteText.apply_tag(tag1, self.noteText.get_start_iter(), self.noteText.get_end_iter())
+    self.noteText.apply_tag(tag2, self.noteText.get_start_iter(), self.noteText.get_end_iter())
+  """
+  
   def responseToDialog(self,entry, dialog, response):
     dialog.response(response)
     
@@ -371,6 +383,7 @@ class Notey(object):
     self.tocList_populate()
     self.clear_state()
 
+  """
   def print_note(self,text):
     printer_name = win32print.GetDefaultPrinter()
     raw_data = text
@@ -386,7 +399,15 @@ class Notey(object):
         win32print.EndDocPrinter (hPrinter)
     finally:
       win32print.ClosePrinter (hPrinter)
+  """
 
+  def print_note(self,text):
+    filename = "C:\Documents and Settings\Administrator\NotesData.txt"
+    #tempfile.mktemp (prefix="NotesData",suffix=".txt",dir=None)
+    open (filename, "w").write (text)
+    win32api.ShellExecute (  0,  "print",  filename,  None,  ".",  0)
+
+  
   def mail_note(self,text):
     email = self.getEmailid()
     url = self.mailto_url(email,"Mail from Notey ",text,"")
@@ -452,17 +473,33 @@ class Notey(object):
     elif days > 0:
       ago="about %d day(s) ago" % days
     elif ( hours > 0 ):
-      mod_time = mod_date.strftime("%H:%M")
+      mod_time = mod_date.strftime("%I:%M %p")
       ago="Yesterday at %s" % mod_time
     elif ( minutes > 0 ):
       ago="about %d minute(s) ago" % minutes
     elif ( seconds > 0 ):
       ago="about %d second(s) ago" % seconds
-    else
+    else:
       return ""
     return ago
 
-      
+                      
+  def search(self, str): 
+    found_text_tag = self.noteText.create_tag(background="grey")
+    start = self.noteText.get_start_iter()
+    end = self.noteText.get_end_iter()
+    
+    i = 0
+    if str:      
+      while 1:
+        res = start.forward_search(str, gtk.TEXT_SEARCH_TEXT_ONLY)
+        if not res:
+         break
+        match_start, match_end = res
+        i += 1
+        self.noteText.apply_tag(found_text_tag, match_start, match_end)
+        start = match_end
+          
   #
   # event handlers 
   #
@@ -476,12 +513,16 @@ class Notey(object):
 
   def on_mainWindow_key_release_event(self, widget,event=None):
     modifier_mask = event.state & gtk.accelerator_get_default_mod_mask()
+    #Cntrl-E to focus title entry  
     if (event.keyval == 101 and modifier_mask == gtk.gdk.CONTROL_MASK):
       self.on_emailButton_clicked()
+    #Cntrl-K to focus title entry  
     elif (event.keyval == 107 and modifier_mask == gtk.gdk.CONTROL_MASK):
       self.titleEntry.grab_focus()
+    #Cntrl-L to focus list view
     elif (event.keyval == 108 and modifier_mask == gtk.gdk.CONTROL_MASK):
       self.tocListView.grab_focus()
+    #Cntrl-P to print selected note      
     elif (event.keyval == 112 and modifier_mask == gtk.gdk.CONTROL_MASK):
       self.on_printButton_clicked()
     
@@ -495,12 +536,27 @@ class Notey(object):
             
   def on_noteTextView_focus_out_event(self, widget, data=None):
     self.save_note()
-  
+
+ 
   def on_tocListView_row_activated(self, widget, row, col):
     model = widget.get_model()
     title = model[row][0]
     self.open_note(title)
-
+    text = self.titleEntry.get_text()
+    self.search(text)
+    """
+    start = self.noteText.get_start_iter()
+    end = self.noteText.get_end_iter()
+    first , last = start.forward_search(text, gtk.TEXT_SEARCH_TEXT_ONLY)
+    if first:
+      line_number = str(first.get_line())
+      found_text_tag = self.noteText.create_tag(background="grey")
+      self.noteText.apply_tag(found_text_tag,first , last)
+      print 'found entry:' + line_number      
+    else:
+      print 'no entry:'
+    """
+      
   def on_emailButton_clicked(self,data=None):
     contents = self.get_selected_note_contents()
     if contents != "":
@@ -565,6 +621,9 @@ class Notey(object):
   
   def on_titleEntry_focus_out_event(self,widget,data=None):
     gobject.idle_add(self.eventProgressBar.set_text, '')
+
+  def on_titleEntry_focus_in_event(self,widget,data=None):
+    self.noteText.set_text("")
     
   def on_titleCell_edited(self, renderer, path, new_title, model):
     self.titleCellRenderer.set_property('editable', False)

@@ -38,6 +38,7 @@
                     <signal name="focus_out_event" handler="on_titleEntry_focus_out_event"/>
                     <signal name="activate" handler="on_titleEntry_activate"/>
                     <signal name="key_release_event" handler="on_titleEntry_key_release_event"/>
+                    <signal name="focus_in_event" handler="on_titleEntry_focus_in_event"/>
                   </object>
                 </child>
               </object>
@@ -47,7 +48,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="emailButton">
+              <object class="GtkToolButton" id="markdownButton">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Email</property>
                 <property name="use_underline">True</property>
