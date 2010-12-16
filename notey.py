@@ -151,6 +151,63 @@ class Preferences(object):
   def on_cancelButton_clicked(self, widget, data=None):
     self.preferencesWindow.destroy()
 
+class Markdown(object):
+  def __init__(self, notey):
+    
+    self.notey = notey
+    self.build_ui()
+    self.markdownWindow.show()
+    content = self.notey.get_selected_note_contents()
+    print "Content = %s" % content
+    #content = content.replace("**","<b>")
+    #print content.split("\n")[1]
+    lines=len(content.splitlines())
+    i=0
+    output=""
+    while i < lines:
+      output+="<p>"
+      output+=content.splitlines()[i]
+      if content.splitlines()[i][0:2] == "**":
+        output=output.replace("**","<b>")
+        output+="</b>"
+      i+=1
+      output+="</p>"
+    self.htmlDisplay.set_text(output)
+    #self.format("**")
+  
+  def build_ui(self):
+    ui_elements = [ 
+                    "markdownWindow",
+                    "htmlDisplayView",                    
+                    "htmlDisplay"                    
+                  ]
+    builder = gtk.Builder()
+    builder.add_from_file( os.path.join( sys.path[0], "markdown.glade" ) )
+    
+    for elem in ui_elements:
+      setattr(self, elem, builder.get_object(elem))
+    
+    builder.connect_signals(self)
+
+  def format(self, str): 
+    if str=="**":
+      found_text_tag = self.htmlDisplay.create_tag(weight=800)     
+    start = self.htmlDisplay.get_start_iter()
+    end = self.htmlDisplay.get_end_iter()
+    
+    i = 0
+    if str:
+      while 1:
+        res = start.forward_search(str, gtk.TEXT_SEARCH_TEXT_ONLY)
+        if not res:
+          break
+        match_start, match_end = res
+        res = match_end.forward_search('\n', gtk.TEXT_SEARCH_TEXT_ONLY)
+        match_start1, match_end1 = res      
+        i += 1
+        self.htmlDisplay.apply_tag(found_text_tag, match_start, match_start1)
+        start = match_end1
+    
 class Notey(object):
   def __init__(self):
     self.notedb = NoteDBsqlite3(os.path.join( sys.path[0], 'notey.sqlite3' ))
@@ -266,31 +323,6 @@ class Notey(object):
     self.noteText.apply_tag(tag2, self.noteText.get_start_iter(), self.noteText.get_end_iter())
   """
   
-  def responseToDialog(self,entry, dialog, response):
-    dialog.response(response)
-    
-  def getEmailid(self,emailid=""):
-    dialog = gtk.MessageDialog(None,
-      gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-      0,
-      gtk.BUTTONS_OK,
-      None)
-
-    entry = gtk.Entry()
-    entry.set_text("")
-    entry.connect("activate", self.responseToDialog, dialog, gtk.RESPONSE_OK)
-
-    hbox = gtk.HBox()
-    hbox.pack_start(gtk.Label("To:"), False, 5, 5)
-    hbox.pack_end(entry)
-  
-    dialog.vbox.pack_end(hbox, True, True, 0)
-    dialog.show_all()
-
-    dialog.run()
-    emailid = entry.get_text()
-    dialog.destroy()
-    return emailid
   
   def compare_data(self, model, iter1, iter2, column):
         data1 = model.get_value(iter1, column)
@@ -402,21 +434,22 @@ class Notey(object):
   """
 
   def print_note(self,text):
-    filename = "C:\Documents and Settings\Administrator\NotesData.txt"
+    filename = "C:\NotesData.txt"
     #tempfile.mktemp (prefix="NotesData",suffix=".txt",dir=None)
     open (filename, "w").write (text)
     win32api.ShellExecute (  0,  "print",  filename,  None,  ".",  0)
-
   
   def mail_note(self,text):
-    email = self.getEmailid()
-    url = self.mailto_url(email,"Mail from Notey ",text,"")
+    url = self.mailto_url("","Notey Notes",text,"")
     webbrowser.open(url,new=1)
 
+  def get_note_line_count(self):
+    line_count = self.noteText.get_line_count()
+    return line_count
+  
   def get_selected_note_contents(self):
     treeselection = self.tocListView.get_selection()
     model, rows = treeselection.get_selected_rows()
-    print "rows = %s" % rows
     titles = []
     text=""
     for j in rows:
@@ -574,6 +607,9 @@ class Notey(object):
         
   def on_preferencesButton_clicked(self, data=None):
     p = Preferences(self)
+
+  def on_markdownButton_clicked(self, data=None):
+    m = Markdown(self)
       
   def on_tocListView_key_release_event(self, widget, data=None):
     treeselection = widget.get_selection()

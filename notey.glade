@@ -48,9 +48,9 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="markdownButton">
+              <object class="GtkToolButton" id="emailButton">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Email</property>
+                <property name="label" translatable="yes">email</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-go-forward</property>
                 <signal name="clicked" handler="on_emailButton_clicked"/>
@@ -80,6 +80,19 @@
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-preferences</property>
                 <signal name="clicked" handler="on_preferencesButton_clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="markdownButton">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">MarkdownView</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-justify-left</property>
+                <signal name="clicked" handler="on_markdownButton_clicked"/>
               </object>
               <packing>
                 <property name="expand">False</property>
