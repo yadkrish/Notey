@@ -159,21 +159,58 @@ class Markdown(object):
     self.markdownWindow.show()
     content = self.notey.get_selected_note_contents()
     print "Content = %s" % content
-    #content = content.replace("**","<b>")
-    #print content.split("\n")[1]
     lines=len(content.splitlines())
+    b_flag=0
+    l_flag=0
     i=0
-    output=""
+    output="<html>\n<body>"
+    none=0
     while i < lines:
-      output+="<p>"
-      output+=content.splitlines()[i]
-      if content.splitlines()[i][0:2] == "**":
-        output=output.replace("**","<b>")
-        output+="</b>"
+      none=0
+      line_content=content.splitlines()[i]
+      if line_content[0:2] == "**":
+        line_content=line_content.replace("**","\n<b>")
+        line_content+="</b>"
+      elif content.splitlines()[i][0:3] == "###":
+        line_content=line_content.replace("###","\n<h3>",1)
+        line_content+="</h3>"
+      elif content.splitlines()[i][0:2] == "##":
+        line_content=line_content.replace("##","\n<h2>")
+        line_content+="</h2>"
+      elif content.splitlines()[i][0:1] == "#":
+        line_content=line_content.replace("#","\n<h1>")
+        line_content+="</h1>"
+      elif content.splitlines()[i][0:1] == "-":
+        l_flag+=1
+        if l_flag ==1:
+          line_content=line_content.replace("-","\n<ul>\n<li>",1)
+          line_content+="</li>"          
+        else:
+          line_content=line_content.replace("-","\n<li>")
+          line_content+="</li>"
+      elif l_flag>0 and content.splitlines()[i][0:1] != "-":
+        l_flag=0
+        line_content="\n</ul>"
+        i-=1
+      elif content.splitlines()[i][0:1] == ">":
+        b_flag+=1
+        if b_flag ==1:
+          line_content=line_content.replace(">","\n<blockquote>\n")
+        else:
+          line_content=line_content.replace(">","\n")
+        if content.splitlines()[i+1][0:1] != ">":
+          line_content+="\n</blockquote>\n"
+      else:
+        none=1
       i+=1
-      output+="</p>"
+      if none==1:
+        output+="\n<p>"
+        output+=line_content
+        output+="</p>"
+      else:
+        output+=line_content
+    output+="\n</body>\n</html>"        
     self.htmlDisplay.set_text(output)
-    #self.format("**")
   
   def build_ui(self):
     ui_elements = [ 
@@ -188,26 +225,7 @@ class Markdown(object):
       setattr(self, elem, builder.get_object(elem))
     
     builder.connect_signals(self)
-
-  def format(self, str): 
-    if str=="**":
-      found_text_tag = self.htmlDisplay.create_tag(weight=800)     
-    start = self.htmlDisplay.get_start_iter()
-    end = self.htmlDisplay.get_end_iter()
-    
-    i = 0
-    if str:
-      while 1:
-        res = start.forward_search(str, gtk.TEXT_SEARCH_TEXT_ONLY)
-        if not res:
-          break
-        match_start, match_end = res
-        res = match_end.forward_search('\n', gtk.TEXT_SEARCH_TEXT_ONLY)
-        match_start1, match_end1 = res      
-        i += 1
-        self.htmlDisplay.apply_tag(found_text_tag, match_start, match_start1)
-        start = match_end1
-    
+   
 class Notey(object):
   def __init__(self):
     self.notedb = NoteDBsqlite3(os.path.join( sys.path[0], 'notey.sqlite3' ))
