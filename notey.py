@@ -259,16 +259,6 @@ class Notey(object):
     #
     self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
 
-    
-  """
-  def test_texttags(self):
-    tag1 = self.noteText.create_tag(name=None, font="Sans Italic 12")
-    tag2 = self.noteText.create_tag(name=None, foreground="Yellow")
-    self.noteText.apply_tag(tag1, self.noteText.get_start_iter(), self.noteText.get_end_iter())
-    self.noteText.apply_tag(tag2, self.noteText.get_start_iter(), self.noteText.get_end_iter())
-  """
-  
-  
   def compare_data(self, model, iter1, iter2, column):
         data1 = model.get_value(iter1, column)
         data2 = model.get_value(iter2, column)
@@ -360,24 +350,6 @@ class Notey(object):
     self.tocList_populate()
     self.clear_state()
 
-  """
-  def print_note(self,text):
-    printer_name = win32print.GetDefaultPrinter()
-    raw_data = text
-
-    hPrinter = win32print.OpenPrinter (printer_name)
-    try:
-      hJob = win32print.StartDocPrinter (hPrinter, 1, ("test of raw data", None, "RAW"))
-      try:
-        win32print.StartPagePrinter (hPrinter)
-        win32print.WritePrinter (hPrinter, raw_data)
-        win32print.EndPagePrinter (hPrinter)
-      finally:
-        win32print.EndDocPrinter (hPrinter)
-    finally:
-      win32print.ClosePrinter (hPrinter)
-  """
-
   def print_note(self,text):
     filename = "C:\NotesData.txt"
     #tempfile.mktemp (prefix="NotesData",suffix=".txt",dir=None)
@@ -407,10 +379,6 @@ class Notey(object):
     
   
   def mailto_url(self,to=None,subject=None,body=None,cc=None):
-    """
-    encodes the content as a mailto link as described on
-    http://www.faqs.org/rfcs/rfc2368.html
-    """
     url = "mailto: " + urllib.quote(to.strip(),"@,")
     sep = "?"
     if cc:
@@ -477,49 +445,78 @@ class Notey(object):
         i += 1
         self.noteText.apply_tag(found_text_tag, match_start, match_end)
         start = match_end
-
-  def markdown(self):    
+    
+  def markdown(self):
+    self.save_note()
     content = self.get_selected_note_contents()
+    htmlData=self.text2html(content)
+
+    filename = "test.html"
+    FILE = open(filename,"w")
+    FILE.writelines(htmlData)
+    FILE.close()
+
+    webbrowser.open("test.html",new=1)
+
+  def replace_specialEntities(self,content):
+    output=content.replace("&","&amp;")
+    output=output.replace("\"","&quot;")
+    output=output.replace("<","&lt;")
+    
+    lines=len(output.splitlines())
+    i=0
+    final_output=""
+    while i < lines:
+      line_content=output.splitlines()[i]
+      if output.splitlines()[i][0:1] != ">":
+        line_content=line_content.replace(">","&gt;",999999999)
+      final_output+=line_content
+      final_output+="\n"
+      i+=1
+    return final_output
+    
+  def text2html(self,content):
     lines=len(content.splitlines())
     b_flag=0
     l_flag=0
     i=0
+    content=self.replace_specialEntities(content)
     output="<html>\n<body>"
-    none=0
     while i < lines:
       none=0
       line_content=content.splitlines()[i]
       if line_content[0:2] == "**":
-        line_content=line_content.replace("**","\n<b>")
+        line_content=line_content.replace("**","\n<b>",1)
         line_content+="</b>"
-      elif content.splitlines()[i][0:3] == "###":
+      elif line_content[0:3] == "###":
         line_content=line_content.replace("###","\n<h3>",1)
         line_content+="</h3>"
-      elif content.splitlines()[i][0:2] == "##":
-        line_content=line_content.replace("##","\n<h2>")
+      elif line_content[0:2] == "##":
+        line_content=line_content.replace("##","\n<h2>",1)
         line_content+="</h2>"
-      elif content.splitlines()[i][0:1] == "#":
-        line_content=line_content.replace("#","\n<h1>")
+      elif line_content[0:1] == "#":
+        line_content=line_content.replace("#","\n<h1>",1)
         line_content+="</h1>"
-      elif content.splitlines()[i][0:1] == "-":
+      elif line_content[0:1] == "-":
         l_flag+=1
         if l_flag ==1:
           line_content=line_content.replace("-","\n<ul>\n<li>",1)
-          line_content+="</li>"          
-        else:
-          line_content=line_content.replace("-","\n<li>")
           line_content+="</li>"
-      elif l_flag>0 and content.splitlines()[i][0:1] != "-":
+        else:
+          line_content=line_content.replace("-","\n<li>",1)
+          line_content+="</li>"
+      elif l_flag>0 and line_content[0:1] != "-":
         l_flag=0
         line_content="\n</ul>"
         i-=1
-      elif content.splitlines()[i][0:1] == ">":
+      elif line_content[0:1] == ">":
         b_flag+=1
         if b_flag ==1:
-          line_content=line_content.replace(">","\n<blockquote>\n")
+          line_content=line_content.replace(">","\n<blockquote>\n",1)
         else:
-          line_content=line_content.replace(">","\n")
+          line_content=line_content.replace(">","\n",1)
         if content.splitlines()[i+1][0:1] != ">":
+          b_flag=0
           line_content+="\n</blockquote>\n"
       else:
         none=1
@@ -530,17 +527,9 @@ class Notey(object):
         output+="</p>"
       else:
         output+=line_content
-    output+="\n</body>\n</html>"        
-    #self.htmlDisplay.set_text(output)
-
-    filename = "test.html"
-    FILE = open(filename,"w")
-    
-    FILE.writelines(output)
-    FILE.close()
-
-    webbrowser.open("test.html",new=1)
-
+      
+    output+="\n</body>\n</html>" 
+    return output
     
   #
   # event handlers 
@@ -578,6 +567,7 @@ class Notey(object):
             
   def on_noteTextView_focus_out_event(self, widget, data=None):
     self.save_note()
+    self.tocList_populate()
 
  
   def on_tocListView_row_activated(self, widget, row, col):
@@ -586,18 +576,6 @@ class Notey(object):
     self.open_note(title)
     text = self.titleEntry.get_text()
     self.search(text)
-    """
-    start = self.noteText.get_start_iter()
-    end = self.noteText.get_end_iter()
-    first , last = start.forward_search(text, gtk.TEXT_SEARCH_TEXT_ONLY)
-    if first:
-      line_number = str(first.get_line())
-      found_text_tag = self.noteText.create_tag(background="grey")
-      self.noteText.apply_tag(found_text_tag,first , last)
-      print 'found entry:' + line_number      
-    else:
-      print 'no entry:'
-    """
       
   def on_emailButton_clicked(self,data=None):
     contents = self.get_selected_note_contents()
@@ -629,20 +607,6 @@ class Notey(object):
     if data.keyval == 65535:
       for title in titles:
         self.delete_note(title)
-    """
-    else:
-      if (data.keyval == 65477 or data.keyval == 65472):
-        text=""
-        for title in titles:
-          text+= title + ":\n"
-          text+= self.notedb.get_note(title).content
-          text+="\n\n"
-          print "text = %s" % text
-        if data.keyval == 65477:
-          self.email_note(text)
-        elif data.keyval == 65472:
-          self.print_note(text)
-    """    
     if len(titles) == 1 and len(rows) == 1:
       title = titles[0]
       row   = rows[0]
