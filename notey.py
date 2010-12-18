@@ -151,81 +151,8 @@ class Preferences(object):
   def on_cancelButton_clicked(self, widget, data=None):
     self.preferencesWindow.destroy()
 
-class Markdown(object):
-  def __init__(self, notey):
-    
-    self.notey = notey
-    self.build_ui()
-    self.markdownWindow.show()
-    content = self.notey.get_selected_note_contents()
-    print "Content = %s" % content
-    lines=len(content.splitlines())
-    b_flag=0
-    l_flag=0
-    i=0
-    output="<html>\n<body>"
-    none=0
-    while i < lines:
-      none=0
-      line_content=content.splitlines()[i]
-      if line_content[0:2] == "**":
-        line_content=line_content.replace("**","\n<b>")
-        line_content+="</b>"
-      elif content.splitlines()[i][0:3] == "###":
-        line_content=line_content.replace("###","\n<h3>",1)
-        line_content+="</h3>"
-      elif content.splitlines()[i][0:2] == "##":
-        line_content=line_content.replace("##","\n<h2>")
-        line_content+="</h2>"
-      elif content.splitlines()[i][0:1] == "#":
-        line_content=line_content.replace("#","\n<h1>")
-        line_content+="</h1>"
-      elif content.splitlines()[i][0:1] == "-":
-        l_flag+=1
-        if l_flag ==1:
-          line_content=line_content.replace("-","\n<ul>\n<li>",1)
-          line_content+="</li>"          
-        else:
-          line_content=line_content.replace("-","\n<li>")
-          line_content+="</li>"
-      elif l_flag>0 and content.splitlines()[i][0:1] != "-":
-        l_flag=0
-        line_content="\n</ul>"
-        i-=1
-      elif content.splitlines()[i][0:1] == ">":
-        b_flag+=1
-        if b_flag ==1:
-          line_content=line_content.replace(">","\n<blockquote>\n")
-        else:
-          line_content=line_content.replace(">","\n")
-        if content.splitlines()[i+1][0:1] != ">":
-          line_content+="\n</blockquote>\n"
-      else:
-        none=1
-      i+=1
-      if none==1:
-        output+="\n<p>"
-        output+=line_content
-        output+="</p>"
-      else:
-        output+=line_content
-    output+="\n</body>\n</html>"        
-    self.htmlDisplay.set_text(output)
-  
-  def build_ui(self):
-    ui_elements = [ 
-                    "markdownWindow",
-                    "htmlDisplayView",                    
-                    "htmlDisplay"                    
-                  ]
-    builder = gtk.Builder()
-    builder.add_from_file( os.path.join( sys.path[0], "markdown.glade" ) )
-    
-    for elem in ui_elements:
-      setattr(self, elem, builder.get_object(elem))
-    
-    builder.connect_signals(self)
-   
+
+     
 class Notey(object):
   def __init__(self):
     self.notedb = NoteDBsqlite3(os.path.join( sys.path[0], 'notey.sqlite3' ))
@@ -550,7 +477,71 @@ class Notey(object):
         i += 1
         self.noteText.apply_tag(found_text_tag, match_start, match_end)
         start = match_end
-          
+
+  def markdown(self):    
+    content = self.get_selected_note_contents()
+    lines=len(content.splitlines())
+    b_flag=0
+    l_flag=0
+    i=0
+    output="<html>\n<body>"
+    none=0
+    while i < lines:
+      none=0
+      line_content=content.splitlines()[i]
+      if line_content[0:2] == "**":
+        line_content=line_content.replace("**","\n<b>")
+        line_content+="</b>"
+      elif content.splitlines()[i][0:3] == "###":
+        line_content=line_content.replace("###","\n<h3>",1)
+        line_content+="</h3>"
+      elif content.splitlines()[i][0:2] == "##":
+        line_content=line_content.replace("##","\n<h2>")
+        line_content+="</h2>"
+      elif content.splitlines()[i][0:1] == "#":
+        line_content=line_content.replace("#","\n<h1>")
+        line_content+="</h1>"
+      elif content.splitlines()[i][0:1] == "-":
+        l_flag+=1
+        if l_flag ==1:
+          line_content=line_content.replace("-","\n<ul>\n<li>",1)
+          line_content+="</li>"          
+        else:
+          line_content=line_content.replace("-","\n<li>")
+          line_content+="</li>"
+      elif l_flag>0 and content.splitlines()[i][0:1] != "-":
+        l_flag=0
+        line_content="\n</ul>"
+        i-=1
+      elif content.splitlines()[i][0:1] == ">":
+        b_flag+=1
+        if b_flag ==1:
+          line_content=line_content.replace(">","\n<blockquote>\n")
+        else:
+          line_content=line_content.replace(">","\n")
+        if content.splitlines()[i+1][0:1] != ">":
+          line_content+="\n</blockquote>\n"
+      else:
+        none=1
+      i+=1
+      if none==1:
+        output+="\n<p>"
+        output+=line_content
+        output+="</p>"
+      else:
+        output+=line_content
+    output+="\n</body>\n</html>"        
+    #self.htmlDisplay.set_text(output)
+
+    filename = "test.html"
+    FILE = open(filename,"w")
+    
+    FILE.writelines(output)
+    FILE.close()
+
+    webbrowser.open("test.html",new=1)
+
+    
   #
   # event handlers 
   #
@@ -627,7 +618,7 @@ class Notey(object):
     p = Preferences(self)
 
   def on_markdownButton_clicked(self, data=None):
-    m = Markdown(self)
+   self.markdown()
       
   def on_tocListView_key_release_event(self, widget, data=None):
     treeselection = widget.get_selection()
